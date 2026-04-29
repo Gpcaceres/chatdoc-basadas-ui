@@ -1,0 +1,27 @@
+@baseUrl = http://127.0.0.1:8000
+
+### 1. Verificar estado del servidor
+GET {{baseUrl}}/
+Accept: application/json
+
+---
+
+### 2. Subir e ingestar un documento (Asegúrate de cambiar la ruta al archivo real)
+# Nota: Reemplaza C:/Ruta/A/Tu/Archivo/documento.txt con la ruta real de tu archivo
+# El nombre filename puede ser cualquiere fijarse mas abajo esta la ruta real del archivo
+POST {{baseUrl}}/ingestar/
+Content-Type: multipart/form-data; boundary=MiFrontera
+
+--MiFrontera
+Content-Disposition: form-data; name="file"; filename="RS-Descriptivo_T_1_2_Caceres_German.pdf" 
+Content-Type: application/pdf
+
+< ./RS-Descriptivo_ T_ 1 _2_Cáceres_Germán.pdf
+--MiFrontera--
+
+### 3. Hacer una pregunta al chatbot
+POST {{baseUrl}}/chat/?pregunta=¿sabes algo sobre concurrencia?
+Accept: application/json
+
+---
+

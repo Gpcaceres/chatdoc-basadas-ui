@@ -1,0 +1,15 @@
+python -m venv venv
+Entorno virtual: .\venv\Scripts\activate        //para desactivar .\venv\Scripts\deactivate
+
+python.exe -m pip install --upgrade pip
+Instalar dependencias: pip install fastapi uvicorn llama-index llama-index-vector-stores-chroma chromadb python-multipart
+
+pip install llama-index-embeddings-huggingface
+pip install torch
+pip install uvicorn fastapi
+pip install python-dotenv
+Ejecutar: uvicorn main:app
+
+
+Herramientas adicionales 
+pip install llama-index-readers-file pymupdf
