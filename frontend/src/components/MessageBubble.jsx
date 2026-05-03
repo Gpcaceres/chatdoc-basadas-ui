@@ -1,73 +1,98 @@
 import ReactMarkdown from "react-markdown";
 import { Bot, User } from "lucide-react";
+import { motion } from "framer-motion";
+import clsx from "clsx";
 
 export default function MessageBubble({ message }) {
   const isUser = message.role === "user";
 
   return (
-    <div
-      className={`flex items-start gap-3 ${isUser ? "flex-row-reverse" : ""}`}
+    <motion.div
+      initial={{ opacity: 0, y: 15, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className={clsx(
+        "flex w-full",
+        isUser ? "justify-end" : "justify-start"
+      )}
     >
-      {/* Avatar */}
       <div
-        className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-          isUser ? "bg-blue-600" : "bg-slate-700"
-        }`}
-      >
-        {isUser ? (
-          <User size={15} className="text-white" />
-        ) : (
-          <Bot size={15} className="text-white" />
+        className={clsx(
+          "flex gap-4 max-w-[85%] md:max-w-[75%]",
+          isUser ? "flex-row-reverse" : "flex-row"
         )}
-      </div>
+      >
+        {/* Avatar */}
+        <div
+          className={clsx(
+            "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-sm mt-1",
+            isUser
+              ? "bg-teal-600 shadow-teal-500/20 text-white"
+              : "bg-bg-hover border border-border-color text-text-muted"
+          )}
+        >
+          {isUser ? <User size={15} /> : <Bot size={15} />}
+        </div>
 
-      {/* Burbuja */}
-      <div
-        className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-          isUser
-            ? "bg-blue-600 text-white rounded-tr-sm"
-            : "bg-white text-slate-800 border border-slate-200 rounded-tl-sm shadow-sm"
-        }`}
-      >
-        {isUser ? (
-          <p className="whitespace-pre-wrap">{message.content}</p>
-        ) : (
-          <ReactMarkdown
-            components={{
-              p: ({ children }) => (
-                <p className="mb-1.5 last:mb-0">{children}</p>
-              ),
-              strong: ({ children }) => (
-                <strong className="font-semibold">{children}</strong>
-              ),
-              em: ({ children }) => <em className="italic">{children}</em>,
-              code: ({ children }) => (
-                <code className="bg-slate-100 text-slate-700 px-1 py-0.5 rounded text-xs font-mono">
-                  {children}
-                </code>
-              ),
-              pre: ({ children }) => (
-                <pre className="bg-slate-100 rounded-lg p-3 my-2 overflow-x-auto text-xs font-mono">
-                  {children}
-                </pre>
-              ),
-              ul: ({ children }) => (
-                <ul className="list-disc pl-5 mb-1.5 space-y-0.5">
-                  {children}
-                </ul>
-              ),
-              ol: ({ children }) => (
-                <ol className="list-decimal pl-5 mb-1.5 space-y-0.5">
-                  {children}
-                </ol>
-              ),
-              li: ({ children }) => <li>{children}</li>,
-            }}
-          >
-            {message.content}
-          </ReactMarkdown>
-        )}
+        {/* Burbuja */}
+        <div
+          className={clsx(
+            "px-5 py-4 rounded-3xl text-[15px] leading-relaxed shadow-sm relative",
+            isUser
+              ? "bg-teal-600 text-white rounded-tr-sm shadow-teal-900/10"
+              : "bg-card text-text-main rounded-tl-sm border border-border-color"
+          )}
+        >
+          {isUser ? (
+            <p className="whitespace-pre-wrap">{message.content}</p>
+          ) : (
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => (
+                  <p className="mb-3 last:mb-0 leading-relaxed text-text-main">{children}</p>
+                ),
+                strong: ({ children }) => (
+                  <strong className="font-semibold text-text-main">{children}</strong>
+                ),
+                em: ({ children }) => <em className="italic text-text-muted">{children}</em>,
+                code: ({ children, className }) => {
+                  const isInline = !className;
+                  return isInline ? (
+                    <code className="bg-bg-hover text-teal-600 dark:text-teal-400 px-1.5 py-0.5 rounded-md text-[13px] font-mono border border-border-color">
+                      {children}
+                    </code>
+                  ) : (
+                    <code className="text-[13px] font-mono">{children}</code>
+                  );
+                },
+                pre: ({ children }) => (
+                  <pre className="bg-background border border-border-color rounded-xl p-4 my-4 overflow-x-auto text-[13px] font-mono text-text-main shadow-inner">
+                    {children}
+                  </pre>
+                ),
+                ul: ({ children }) => (
+                  <ul className="list-disc pl-6 mb-3 space-y-1 marker:text-text-muted">
+                    {children}
+                  </ul>
+                ),
+                ol: ({ children }) => (
+                  <ol className="list-decimal pl-6 mb-3 space-y-1 marker:text-text-muted">
+                    {children}
+                  </ol>
+                ),
+                li: ({ children }) => <li className="pl-1">{children}</li>,
+                a: ({ children, href }) => (
+                  <a href={href} className="text-teal-600 dark:text-teal-400 hover:opacity-80 underline underline-offset-2 transition-colors">
+                    {children}
+                  </a>
+                )
+              }}
+            >
+              {message.content}
+            </ReactMarkdown>
+          )}
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

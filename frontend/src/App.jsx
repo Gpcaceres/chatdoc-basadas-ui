@@ -1,52 +1,69 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Toaster } from "react-hot-toast";
-import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import ChatWindow from "./components/ChatWindow";
-import FileUpload from "./components/FileUpload";
 
 export default function App() {
-  const [view, setView] = useState("chat"); // 'chat' | 'upload'
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [chatKey, setChatKey] = useState(0); // forzar reset del chat
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [chatKey, setChatKey] = useState(0);
+  
+  // Theme state
+  const [isDark, setIsDark] = useState(() => {
+    // Check localStorage or default to dark
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("theme");
+      if (saved) return saved === "dark";
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+    return true; // Default dark
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (isDark) {
+      root.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      root.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDark]);
 
   const handleNewChat = () => {
     setChatKey((k) => k + 1);
-    setView("chat");
   };
 
-  const handleUploadDone = () => {
-    setChatKey((k) => k + 1);
-    setView("chat");
-  };
+  const toggleTheme = () => setIsDark(!isDark);
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 overflow-hidden">
-      <Header
-        sidebarOpen={sidebarOpen}
-        onToggleSidebar={() => setSidebarOpen((o) => !o)}
-      />
-
-      <div className="flex flex-1 overflow-hidden">
+    <div className="flex h-screen overflow-hidden text-text-main bg-background p-2 gap-2 transition-colors duration-300">
+      {/* Panel Izquierdo: Fuentes / Base de Conocimiento */}
+      <div className="w-[340px] flex-shrink-0 flex flex-col panel-container relative overflow-hidden transition-colors duration-300">
         <Sidebar
-          open={sidebarOpen}
-          view={view}
+          uploadedFiles={uploadedFiles}
+          setUploadedFiles={setUploadedFiles}
           onNewChat={handleNewChat}
-          onUpload={() => setView("upload")}
+          isDark={isDark}
+          toggleTheme={toggleTheme}
         />
-
-        <main className="flex-1 overflow-hidden">
-          {view === "chat" ? (
-            <ChatWindow key={chatKey} />
-          ) : (
-            <FileUpload onDone={handleUploadDone} />
-          )}
-        </main>
       </div>
+
+      {/* Panel Derecho: Chat */}
+      <main className="flex-1 flex flex-col panel-container relative overflow-hidden transition-colors duration-300">
+        <ChatWindow key={chatKey} />
+      </main>
 
       <Toaster
         position="bottom-right"
-        toastOptions={{ className: "text-sm", duration: 3000 }}
+        toastOptions={{
+          className: "text-sm",
+          style: {
+            background: "var(--bg-panel)",
+            color: "var(--text-primary)",
+            border: "1px solid var(--border-subtle)"
+          },
+          duration: 3000,
+        }}
       />
     </div>
   );

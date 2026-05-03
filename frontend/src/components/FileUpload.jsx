@@ -8,8 +8,11 @@ import {
   XCircle,
   X,
   ArrowRight,
+  FileBox
 } from "lucide-react";
 import { uploadDocument } from "../api/api";
+import { motion, AnimatePresence } from "framer-motion";
+import clsx from "clsx";
 
 const ACCEPTED_TYPES = {
   "application/pdf": [".pdf"],
@@ -48,10 +51,10 @@ export default function FileUpload({ onDone }) {
       try {
         await uploadDocument(file);
         res.push({ name: file.name, ok: true });
-        toast.success(`"${file.name}" ingestado correctamente`);
+        toast.success(`"${file.name}" procesado con éxito`, { icon: '✨' });
       } catch {
         res.push({ name: file.name, ok: false });
-        toast.error(`Error al procesar "${file.name}"`);
+        toast.error(`Error al subir "${file.name}"`);
       }
     }
 
@@ -61,135 +64,191 @@ export default function FileUpload({ onDone }) {
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-50">
-      <div className="max-w-2xl mx-auto px-6 py-10">
-        <h2 className="text-xl font-semibold text-slate-800 mb-1">
-          Cargar Documentos
-        </h2>
-        <p className="text-sm text-slate-500 mb-6">
-          Arrastra y suelta tus archivos o haz clic para explorar. Formatos
-          aceptados:{" "}
-          <span className="font-medium text-slate-600">
-            PDF · TXT · DOC · DOCX
-          </span>
-          .
-        </p>
+    <div className="h-full w-full overflow-y-auto scrollbar-custom flex flex-col pt-12 pb-32">
+      <div className="max-w-2xl mx-auto w-full px-6">
+        
+        <div className="text-center mb-10">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/20 flex items-center justify-center mx-auto mb-5">
+            <FileBox className="text-indigo-400" size={32} />
+          </div>
+          <h2 className="text-3xl font-semibold text-zinc-100 tracking-tight mb-3">
+            Base de Conocimiento
+          </h2>
+          <p className="text-zinc-400 max-w-md mx-auto leading-relaxed">
+            Sube tus documentos para que la IA los analice y pueda responder preguntas sobre ellos de forma inteligente.
+          </p>
+        </div>
 
         {/* Zona de drop */}
-        <div
+        <motion.div
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer select-none transition-all ${
+          className={clsx(
+            "glass-panel border-2 border-dashed rounded-3xl p-12 text-center cursor-pointer select-none transition-all duration-300 relative overflow-hidden group",
             isDragActive
-              ? "border-blue-500 bg-blue-50 scale-[1.01]"
-              : "border-slate-300 bg-white hover:border-blue-400 hover:bg-slate-50"
-          }`}
+              ? "border-indigo-500 bg-indigo-500/5"
+              : "border-zinc-700 hover:border-indigo-500/50 hover:bg-white/5"
+          )}
         >
+          <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+          
           <input {...getInputProps()} />
           <UploadCloud
-            size={44}
-            className={`mx-auto mb-4 transition-colors ${
-              isDragActive ? "text-blue-500" : "text-slate-400"
-            }`}
+            size={48}
+            className={clsx(
+              "mx-auto mb-5 transition-colors duration-300",
+              isDragActive ? "text-indigo-400" : "text-zinc-500 group-hover:text-indigo-400"
+            )}
           />
           {isDragActive ? (
-            <p className="text-blue-600 font-semibold text-base">
-              Suelta los archivos aquí
+            <p className="text-indigo-400 font-semibold text-lg">
+              Suelta los archivos ahora...
             </p>
           ) : (
             <>
-              <p className="text-slate-700 font-medium text-base">
-                Arrastra y suelta archivos aquí
+              <p className="text-zinc-200 font-medium text-lg mb-1">
+                Arrastra y suelta tus archivos aquí
               </p>
-              <p className="text-slate-400 text-sm mt-1">
+              <p className="text-zinc-500 text-sm">
                 o{" "}
-                <span className="text-blue-500 underline underline-offset-2">
-                  haz clic para seleccionar
+                <span className="text-indigo-400 hover:text-indigo-300 underline underline-offset-4 transition-colors">
+                  haz clic para buscar en tu equipo
                 </span>
               </p>
             </>
           )}
-          <p className="text-xs text-slate-400 mt-4">PDF · TXT · DOC · DOCX</p>
-        </div>
+          <div className="mt-6 flex justify-center gap-2">
+            {["PDF", "TXT", "DOCX"].map(ext => (
+              <span key={ext} className="px-2.5 py-1 rounded-md bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 text-xs font-medium tracking-widest">
+                {ext}
+              </span>
+            ))}
+          </div>
+        </motion.div>
 
-        {/* Lista de archivos pendientes */}
-        {files.length > 0 && (
-          <div className="mt-5 space-y-2">
-            <p className="text-sm font-medium text-slate-600 mb-2">
-              {files.length} archivo{files.length > 1 ? "s" : ""} seleccionado
-              {files.length > 1 ? "s" : ""}
-            </p>
-
-            {files.map((f, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm"
+        {/* Archivos pendientes y Resultados combinados en un contenedor */}
+        <div className="mt-8">
+          <AnimatePresence mode="popLayout">
+            {files.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="space-y-3"
               >
-                <FileText size={16} className="text-blue-500 flex-shrink-0" />
-                <span className="flex-1 text-sm text-slate-700 truncate">
-                  {f.name}
-                </span>
-                <span className="text-xs text-slate-400 flex-shrink-0">
-                  {(f.size / 1024).toFixed(1)} KB
-                </span>
-                <button
-                  onClick={() => removeFile(i)}
-                  className="text-slate-400 hover:text-red-500 transition-colors flex-shrink-0 ml-1"
-                  title="Quitar archivo"
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-widest">
+                    Archivos a procesar ({files.length})
+                  </h3>
+                </div>
+
+                <div className="space-y-2">
+                  <AnimatePresence>
+                    {files.map((f, i) => (
+                      <motion.div
+                        key={`${f.name}-${i}`}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="flex items-center gap-4 glass-panel rounded-2xl px-4 py-3 group"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center flex-shrink-0">
+                          <FileText size={18} className="text-indigo-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-zinc-200 truncate">
+                            {f.name}
+                          </p>
+                          <p className="text-xs text-zinc-500">
+                            {(f.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeFile(i);
+                          }}
+                          className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-500 hover:text-red-400 hover:bg-red-400/10 transition-colors flex-shrink-0"
+                          title="Eliminar"
+                        >
+                          <X size={16} />
+                        </button>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleUpload}
+                  disabled={uploading}
+                  className="mt-6 w-full py-4 bg-indigo-600 text-white font-semibold rounded-2xl hover:bg-indigo-500 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed transition-colors shadow-lg shadow-indigo-500/20 relative overflow-hidden"
                 >
-                  <X size={15} />
-                </button>
-              </div>
-            ))}
+                  {uploading ? (
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="w-5 h-5 border-2 border-zinc-400 border-t-white rounded-full animate-spin" />
+                      Procesando...
+                    </div>
+                  ) : (
+                    "Ingestar Documentos"
+                  )}
+                </motion.button>
+              </motion.div>
+            )}
 
-            <button
-              onClick={handleUpload}
-              disabled={uploading}
-              className="mt-3 w-full py-3 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {uploading
-                ? "Procesando archivos…"
-                : `Ingestar ${files.length} archivo${files.length > 1 ? "s" : ""}`}
-            </button>
-          </div>
-        )}
-
-        {/* Resultados de ingesta */}
-        {results.length > 0 && (
-          <div className="mt-5 space-y-2">
-            <p className="text-sm font-medium text-slate-600 mb-2">
-              Resultados de ingesta
-            </p>
-
-            {results.map((r, i) => (
-              <div
-                key={i}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm border ${
-                  r.ok
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : "bg-red-50 text-red-600 border-red-200"
-                }`}
+            {results.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-4 mt-8"
               >
-                {r.ok ? (
-                  <CheckCircle size={16} className="flex-shrink-0" />
-                ) : (
-                  <XCircle size={16} className="flex-shrink-0" />
-                )}
-                <span className="flex-1 truncate">{r.name}</span>
-                <span className="ml-auto flex-shrink-0 font-medium">
-                  {r.ok ? "Procesado" : "Error"}
-                </span>
-              </div>
-            ))}
+                <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-widest text-center mb-4">
+                  Resultados
+                </h3>
 
-            <button
-              onClick={onDone}
-              className="mt-4 w-full flex items-center justify-center gap-2 py-3 bg-slate-800 text-white text-sm font-semibold rounded-xl hover:bg-slate-700 transition-colors"
-            >
-              Ir al Chat
-              <ArrowRight size={16} />
-            </button>
-          </div>
-        )}
+                <div className="space-y-2">
+                  {results.map((r, i) => (
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      key={i}
+                      className={clsx(
+                        "flex items-center gap-4 px-4 py-3 rounded-2xl border",
+                        r.ok
+                          ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-400"
+                          : "bg-red-500/5 border-red-500/20 text-red-400"
+                      )}
+                    >
+                      <div className={clsx(
+                        "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                        r.ok ? "bg-emerald-500/10" : "bg-red-500/10"
+                      )}>
+                        {r.ok ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                      </div>
+                      <span className="flex-1 text-sm font-medium text-zinc-200 truncate">{r.name}</span>
+                      <span className="text-xs font-semibold uppercase tracking-wider">
+                        {r.ok ? "Éxito" : "Error"}
+                      </span>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={onDone}
+                  className="mt-8 w-full flex items-center justify-center gap-2 py-4 glass-panel hover:bg-white/10 text-white font-semibold rounded-2xl transition-colors ring-1 ring-white/10"
+                >
+                  Ir al Chat
+                  <ArrowRight size={18} />
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
