@@ -24,10 +24,10 @@ export default function Sidebar({ uploadedFiles, setUploadedFiles, onNewChat, is
     for (const file of acceptedFiles) {
       try {
         await uploadDocument(file);
-        newFiles.push({ name: file.name, ok: true });
+        newFiles.push({ name: file.name, ok: true, selected: false });
         toast.success(`"${file.name}" analizado`, { icon: '✨' });
       } catch {
-        newFiles.push({ name: file.name, ok: false });
+        newFiles.push({ name: file.name, ok: false, selected: false });
         toast.error(`Error al procesar "${file.name}"`);
       }
     }
@@ -41,6 +41,12 @@ export default function Sidebar({ uploadedFiles, setUploadedFiles, onNewChat, is
     accept: ACCEPTED_TYPES,
     multiple: true,
   });
+
+  const toggleSelection = (index) => {
+    setUploadedFiles(prev => prev.map((f, i) => 
+      i === index ? { ...f, selected: !f.selected } : f
+    ));
+  };
 
   return (
     <div className="flex flex-col h-full bg-transparent">
@@ -93,9 +99,20 @@ export default function Sidebar({ uploadedFiles, setUploadedFiles, onNewChat, is
                 animate={{ opacity: 1, x: 0 }}
                 className={clsx(
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors",
-                  f.ok ? "bg-bg-hover border-border-color hover:border-text-muted" : "bg-red-500/5 border-red-500/20"
+                  f.ok ? (f.selected ? "bg-teal-500/10 border-teal-500/30" : "bg-bg-hover border-border-color hover:border-text-muted") : "bg-red-500/5 border-red-500/20"
                 )}
               >
+                {f.ok && (
+                  <div className="flex-shrink-0 flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={f.selected || false}
+                      onChange={() => toggleSelection(i)}
+                      className="w-4 h-4 rounded border-border-color text-teal-600 focus:ring-teal-500/50 bg-transparent cursor-pointer"
+                      title="Seleccionar para analizar (si ninguno está seleccionado se analizarán todos)"
+                    />
+                  </div>
+                )}
                 <div className={clsx(
                   "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
                   f.ok ? "bg-teal-500/10 text-teal-600 dark:text-teal-400" : "bg-red-500/10 text-red-600 dark:text-red-400"

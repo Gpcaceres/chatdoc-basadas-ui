@@ -20,7 +20,9 @@ Settings.llm = Groq(model="llama-3.3-70b-versatile", api_key=os.getenv("GROQ_API
 DB_PATH = "./data/chroma_db"
 COLLECTION_NAME = "documentos_usuario"
 
-def consultar_chat(pregunta: str):
+from llama_index.core.vector_stores import MetadataFilters, MetadataFilter, FilterOperator, FilterCondition
+
+def consultar_chat(pregunta: str, archivos: list[str] = None):
     # 1. Conectar a la DB existente
     db = chromadb.PersistentClient(path=DB_PATH)
     chroma_collection = db.get_or_create_collection(COLLECTION_NAME)
@@ -39,9 +41,21 @@ def consultar_chat(pregunta: str):
     """
     
     # 2. Configuramos el motor de consulta
-    query_engine = index.as_query_engine(
-        system_prompt=system_prompt
-    )
+    filters = None
+    if archivos and len(archivos) > 0:
+        filtros = [
+            MetadataFilter(key="file_name", value=archivo, operator=FilterOperator.EQ)
+            for archivo in archivos
+        ]
+        filters = MetadataFilters(filters=filtros, condition=FilterCondition.OR)
+        query_engine = index.as_query_engine(
+            system_prompt=system_prompt,
+            filters=filters
+        )
+    else:
+        query_engine = index.as_query_engine(
+            system_prompt=system_prompt
+        )
     
     response = query_engine.query(pregunta)
     return str(response)

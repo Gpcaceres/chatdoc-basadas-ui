@@ -9,3 +9,5 @@ torch
 python-dotenv
 llama-index-readers-file
 pymupdf
+llama-index-llms-groq
+docx2txt

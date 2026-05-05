@@ -50,7 +50,7 @@ export default function App() {
 
       {/* Panel Derecho: Chat */}
       <main className="flex-1 flex flex-col panel-container relative overflow-hidden transition-colors duration-300">
-        <ChatWindow key={chatKey} />
+        <ChatWindow key={chatKey} uploadedFiles={uploadedFiles} />
       </main>
 
       <Toaster

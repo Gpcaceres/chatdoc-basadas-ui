@@ -1,6 +1,7 @@
 import os
 import shutil
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Query
+from typing import List, Optional
 from services.ingesta import procesar_y_almacenar
 from services.chat import consultar_chat
 from fastapi.middleware.cors import CORSMiddleware
@@ -45,12 +46,12 @@ async def ingest_document(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
     
 @app.post("/chat/")
-async def chat(pregunta: str):
+async def chat(pregunta: str, archivos: Optional[List[str]] = Query(None)):
     """
     Endpoint para interactuar con los documentos procesados.
     """
     try:
-        respuesta = consultar_chat(pregunta)
+        respuesta = consultar_chat(pregunta, archivos)
         return {"pregunta": pregunta, "respuesta": respuesta}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -11,7 +11,7 @@ const WELCOME = {
     "¡Hola! Soy tu **asistente documental** impulsado por IA.\n\nCarga tus documentos en la sección de fuentes (a la izquierda) y pregúntame lo que necesites saber. Analizaré la información y te daré respuestas precisas.",
 };
 
-export default function ChatWindow() {
+export default function ChatWindow({ uploadedFiles = [] }) {
   const [messages, setMessages] = useState([WELCOME]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,7 +32,8 @@ export default function ChatWindow() {
     setLoading(true);
 
     try {
-      const res = await sendMessage(text);
+      const selectedFiles = uploadedFiles.filter(f => f.selected && f.ok).map(f => f.name);
+      const res = await sendMessage(text, selectedFiles);
       setMessages([
         ...updated,
         { role: "assistant", content: res.data.respuesta },
