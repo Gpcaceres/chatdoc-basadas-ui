@@ -1,0 +1,528 @@
+\documentclass[12pt,a4paper]{article}
+
+%% ─── PAQUETES ────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds}
+\usepackage{mdframed}
+\usepackage{setspace}
+\usepackage{parskip}
+
+%% ─── COLORES ─────────────────────────────────────────────────────────────────
+\definecolor{teal}{RGB}{20,184,166}
+\definecolor{emerald}{RGB}{16,185,129}
+\definecolor{slate}{RGB}{71,85,105}
+\definecolor{lightgray}{RGB}{241,245,249}
+\definecolor{codebg}{RGB}{30,41,59}
+\definecolor{codetext}{RGB}{226,232,240}
+
+%% ─── HYPERREF ────────────────────────────────────────────────────────────────
+\hypersetup{
+  colorlinks=true,
+  linkcolor=teal,
+  urlcolor=teal,
+  citecolor=emerald,
+  pdftitle={ChatDoc AI -- Agente de Consulta Documental},
+  pdfauthor={},
+}
+
+%% ─── CABECERA Y PIE ──────────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{slate}{ChatDoc AI}}
+\fancyhead[R]{\small\textcolor{slate}{Informe Técnico}}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+%% ─── TÍTULOS ─────────────────────────────────────────────────────────────────
+\titleformat{\section}{\Large\bfseries\color{teal}}{}{0em}{}[\titlerule]
+\titleformat{\subsection}{\large\bfseries\color{slate}}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{slate}}{}{0em}{}
+
+%% ─── LISTINGS ────────────────────────────────────────────────────────────────
+\lstset{
+  backgroundcolor=\color{codebg},
+  basicstyle=\footnotesize\ttfamily\color{codetext},
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{slate},
+  keywordstyle=\color{teal},
+  commentstyle=\color{emerald},
+  stringstyle=\color{yellow!80},
+  numbers=left,
+  numberstyle=\tiny\color{slate},
+  numbersep=8pt,
+}
+
+%% ─── TIKZ: estilos globales ──────────────────────────────────────────────────
+\tikzset{
+  block/.style={rectangle, draw=slate, fill=lightgray, text centered,
+                rounded corners=4pt, minimum height=1cm, minimum width=3cm,
+                font=\small},
+  sensor/.style={block, fill=teal!20, draw=teal},
+  decision/.style={block, fill=emerald!20, draw=emerald},
+  actuator/.style={block, fill=orange!20, draw=orange!70},
+  arrow/.style={-Latex, thick, color=slate},
+  label/.style={font=\scriptsize\itshape, color=slate},
+}
+
+%%─────────────────────────────────────────────────────────────────────────────
+%%  PORTADA
+%%─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+
+\begin{titlepage}
+  \centering
+  \vspace*{2cm}
+
+  {\Huge\bfseries\color{teal} ChatDoc AI}\\[0.4cm]
+  {\Large\color{slate} Agente de Consulta Documental Basado en RAG}\\[2cm]
+
+  \begin{mdframed}[linecolor=teal, linewidth=1.5pt, innertopmargin=10pt,
+                   innerbottommargin=10pt, roundcorner=6pt]
+    \centering
+    \textbf{Informe Técnico}\\
+    Arquitectura de Agentes Inteligentes\\[0.3cm]
+    {\small Identificación de Sensores, Decisiones y Actuadores}
+  \end{mdframed}
+
+  \vfill
+  {\large Mayo 2026}
+\end{titlepage}
+
+%%─────────────────────────────────────────────────────────────────────────────
+%% TABLA DE CONTENIDOS
+%%─────────────────────────────────────────────────────────────────────────────
+\tableofcontents
+\newpage
+
+%%─────────────────────────────────────────────────────────────────────────────
+%% 1. RESUMEN
+%%─────────────────────────────────────────────────────────────────────────────
+\section{Resumen}
+
+El presente informe describe el diseño, implementación y comportamiento del sistema \textbf{ChatDoc AI}, un agente inteligente de consulta documental que permite a los usuarios cargar documentos (PDF, DOCX, TXT) y realizar preguntas en lenguaje natural sobre su contenido. El agente aplica el paradigma \textit{Retrieval-Augmented Generation} (RAG), combinando búsqueda semántica vectorial con generación de texto mediante un modelo de lenguaje de gran escala (LLM).
+
+La arquitectura se apoya en \textbf{LlamaIndex} como framework de orquestación, \textbf{ChromaDB} como base de datos vectorial persistente, \textbf{HuggingFace embeddings} (BAAI/bge-small-en-v1.5) para la vectorización y \textbf{Groq} con el modelo \texttt{llama-3.3-70b-versatile} como motor de respuesta. El frontend, desarrollado en React con Vite y Tailwind CSS, ofrece una interfaz de usuario moderna con soporte de tema claro/oscuro.
+
+Se identifican y analizan los \textbf{sensores}, \textbf{módulos de decisión} y \textbf{actuadores} del agente, mostrando cómo cada componente participa en el ciclo percepción–razonamiento–acción propio de los sistemas basados en agentes.
+
+\medskip
+\textbf{Palabras clave:} RAG, LLM, agente inteligente, LlamaIndex, ChromaDB, FastAPI, React.
+
+%%─────────────────────────────────────────────────────────────────────────────
+%% 2. INTRODUCCIÓN
+%%─────────────────────────────────────────────────────────────────────────────
+\section{Introducción}
+
+En los últimos años, los modelos de lenguaje de gran escala (LLMs) han demostrado capacidades notables para la comprensión y generación de texto. Sin embargo, su entrenamiento estático no contempla documentación privada o especializada propia de cada organización. El patrón \textbf{RAG} (\textit{Retrieval-Augmented Generation}) emerge como solución: combina la recuperación semántica de fragmentos relevantes de documentos con la capacidad generativa del LLM, restringiendo las respuestas al contexto cargado.
+
+\textbf{ChatDoc AI} es un sistema RAG completo que implementa este paradigma con las siguientes características:
+
+\begin{itemize}[leftmargin=1.5cm]
+  \item Ingesta y vectorización de documentos en tiempo real (PDF, DOCX, TXT).
+  \item Almacenamiento persistente de vectores con metadatos en ChromaDB.
+  \item Consulta en lenguaje natural con respuestas fundamentadas en documentos.
+  \item Filtrado opcional por documento específico para mayor precisión.
+  \item Interfaz gráfica moderna con notificaciones de estado.
+\end{itemize}
+
+Desde la perspectiva de los agentes inteligentes, el sistema puede modelarse como un \textbf{agente reactivo informado}, donde los sensores reciben la entrada del entorno (usuario y documentos), el módulo de decisión razona sobre esa información mediante búsqueda semántica y el LLM, y los actuadores producen respuestas y modificaciones en el estado del sistema.
+
+%%─────────────────────────────────────────────────────────────────────────────
+%% 3. OBJETIVOS
+%%─────────────────────────────────────────────────────────────────────────────
+\section{Objetivos}
+
+\subsection{Objetivo General}
+
+Diseñar e implementar un agente inteligente de consulta documental que permita a los usuarios interactuar mediante lenguaje natural con el contenido de sus propios documentos, garantizando respuestas contextualmente precisas y limitadas al corpus cargado.
+
+\subsection{Objetivos Específicos}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Implementar un \textit{pipeline} de ingesta documental que procese, fragmente y vectorice documentos en formato PDF, DOCX y TXT.
+  \item Configurar y mantener una base de datos vectorial (ChromaDB) con persistencia en disco para almacenar los \textit{embeddings} y metadatos de los documentos.
+  \item Integrar un LLM de alta capacidad (Llama 3.3-70b via Groq) para la generación de respuestas basadas exclusivamente en el contexto recuperado.
+  \item Desarrollar una API REST (FastAPI) que exponga los servicios de ingesta y consulta al frontend.
+  \item Construir una interfaz de usuario (React + Tailwind CSS) que permita la carga de documentos, selección de fuentes y conversación con el agente.
+  \item Identificar y documentar formalmente los \textbf{sensores}, \textbf{módulos de decisión} y \textbf{actuadores} del agente para facilitar su análisis y extensión futura.
+\end{enumerate}
+
+%%─────────────────────────────────────────────────────────────────────────────
+%% 4. METODOLOGÍA
+%%─────────────────────────────────────────────────────────────────────────────
+\section{Metodología}
+
+El desarrollo del sistema siguió una metodología \textbf{iterativa e incremental}, organizada en las siguientes fases:
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item \textbf{Análisis de requerimientos}: Identificación de casos de uso principales (carga de documentos, consulta en lenguaje natural, filtrado por fuente) y restricciones técnicas (respuestas basadas exclusivamente en el contexto).
+  \item \textbf{Diseño de arquitectura}: Selección del stack tecnológico (LlamaIndex, ChromaDB, Groq, FastAPI, React) y definición del flujo de datos entre componentes.
+  \item \textbf{Implementación del backend}: Desarrollo de los servicios de ingesta (\texttt{ingesta.py}) y consulta (\texttt{chat.py}), con exposición via FastAPI.
+  \item \textbf{Implementación del frontend}: Desarrollo de los componentes React (Sidebar, ChatWindow, MessageBubble, Header) y la capa de comunicación API con Axios.
+  \item \textbf{Pruebas de integración}: Verificación del pipeline completo mediante el archivo \texttt{test\_chat.py} y el archivo de peticiones HTTP \texttt{requests.http}.
+  \item \textbf{Análisis de comportamiento del agente}: Identificación y clasificación de sensores, decisiones y actuadores bajo el marco teórico de agentes inteligentes.
+\end{enumerate}
+
+%%─────────────────────────────────────────────────────────────────────────────
+%% 5. DESARROLLO
+%%─────────────────────────────────────────────────────────────────────────────
+\section{Desarrollo}
+
+\subsection{Arquitectura General del Sistema}
+
+El sistema se estructura en dos capas principales: un \textbf{backend} Python (FastAPI) y un \textbf{frontend} JavaScript (React/Vite). Ambas capas se comunican mediante una API REST con CORS habilitado.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.4cm and 2cm]
+
+  %% Frontend
+  \node[sensor] (ui) {Interfaz de Usuario\\(React / Vite)};
+  \node[block, below=0.8cm of ui] (api_client) {API Client\\(Axios)};
+
+  %% Backend
+  \node[block, right=3cm of ui] (fastapi) {FastAPI\\REST API};
+  \node[sensor, below=0.8cm of fastapi] (ingesta) {Servicio Ingesta\\(ingesta.py)};
+  \node[decision, right=2.5cm of fastapi] (llamaindex) {LlamaIndex\\Orchestration};
+
+  %% Stores
+  \node[actuator, below=0.8cm of llamaindex] (chromadb) {ChromaDB\\Vector Store};
+  \node[decision, above=0.8cm of llamaindex] (groq) {Groq API\\Llama 3.3-70b};
+  \node[block, below=0.8cm of ingesta] (hf) {HuggingFace\\bge-small-en-v1.5};
+
+  %% Arrows
+  \draw[arrow] (ui) -- (api_client);
+  \draw[arrow] (api_client) -- node[above, label]{HTTP POST} (fastapi);
+  \draw[arrow] (fastapi) -- (ingesta);
+  \draw[arrow] (fastapi) -- (llamaindex);
+  \draw[arrow] (llamaindex) -- (chromadb);
+  \draw[arrow] (llamaindex) -- (groq);
+  \draw[arrow] (ingesta) -- (hf);
+  \draw[arrow] (hf) -- (chromadb);
+
+\end{tikzpicture}
+\caption{Diagrama de arquitectura general del sistema ChatDoc AI.}
+\label{fig:arquitectura}
+\end{figure}
+
+\subsection{Identificación de Sensores, Decisiones y Actuadores}
+
+La siguiente tabla resume de forma concisa el rol de cada componente dentro del ciclo del agente:
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{>{\bfseries}p{2.6cm} p{3.8cm} p{5cm} p{2.8cm}}
+\toprule
+\textbf{Categoría} & \textbf{Componente} & \textbf{Descripción} & \textbf{Módulo} \\
+\midrule
+\rowcolor{teal!10}
+Sensor & Entrada de texto & Pregunta del usuario en lenguaje natural & \texttt{ChatWindow.jsx} \\
+\rowcolor{teal!10}
+Sensor & Carga de archivo & Documento cargado (PDF/DOCX/TXT) via drag-and-drop & \texttt{Sidebar.jsx} \\
+\rowcolor{teal!10}
+Sensor & Selección de fuente & Archivos activos para filtrar la consulta & \texttt{Sidebar.jsx} \\
+\rowcolor{teal!10}
+Sensor & Estado HTTP & Respuesta del servidor (éxito/error de conexión) & \texttt{api.js} \\
+\midrule
+\rowcolor{emerald!10}
+Decisión & Vectorización & Conversión de texto a embeddings semánticos & \texttt{ingesta.py} \\
+\rowcolor{emerald!10}
+Decisión & Indexación & Almacenamiento vectorial con metadatos en ChromaDB & \texttt{ingesta.py} \\
+\rowcolor{emerald!10}
+Decisión & Recuperación semántica & Búsqueda por similitud del vector de la pregunta & \texttt{chat.py} \\
+\rowcolor{emerald!10}
+Decisión & Filtrado por fuente & Aplicación de MetadataFilters por nombre de archivo & \texttt{chat.py} \\
+\rowcolor{emerald!10}
+Decisión & Generación RAG & Síntesis de respuesta con LLM + contexto recuperado & \texttt{chat.py} \\
+\rowcolor{emerald!10}
+Decisión & Prompt restrictivo & Política de respuesta: solo contexto, sin inventar & \texttt{chat.py} \\
+\midrule
+\rowcolor{orange!10}
+Actuador & Respuesta en chat & Texto de respuesta mostrado en la interfaz & \texttt{ChatWindow.jsx} \\
+\rowcolor{orange!10}
+Actuador & Notificación toast & Alerta visual de éxito o error de ingesta & \texttt{Sidebar.jsx} \\
+\rowcolor{orange!10}
+Actuador & Escritura en ChromaDB & Persistencia de vectores y documentos indexados & \texttt{ingesta.py} \\
+\rowcolor{orange!10}
+Actuador & Indicador de carga & Animación visual mientras el agente procesa & \texttt{ChatWindow.jsx} \\
+\bottomrule
+\end{tabular}
+\caption{Clasificación de sensores, decisiones y actuadores del agente ChatDoc AI.}
+\label{tab:sda}
+\end{table}
+
+\subsection{Sensores del Agente}
+
+Los sensores son los mecanismos mediante los cuales el agente \textbf{percibe el entorno}. En ChatDoc AI se identifican cuatro sensores principales:
+
+\subsubsection{S1 -- Entrada de Texto (Pregunta del Usuario)}
+
+El componente \texttt{ChatWindow.jsx} contiene un área de texto (\texttt{<textarea>}) que captura la pregunta del usuario. La acción se dispara al presionar \texttt{Enter} (sin Shift) o el botón de envío. El texto es validado (no vacío, no en estado de carga) antes de enviarse.
+
+\subsubsection{S2 -- Carga de Documento}
+
+El componente \texttt{Sidebar.jsx} implementa una zona de \textit{drag-and-drop} mediante la librería \texttt{react-dropzone}. Acepta los tipos MIME: \texttt{application/pdf}, \texttt{text/plain}, \texttt{application/vnd.openxmlformats-officedocument.wordprocessingml.document} y \texttt{application/msword}. Cada archivo se envía al endpoint \texttt{POST /ingestar/} del backend.
+
+\subsubsection{S3 -- Selección de Fuente Activa}
+
+El usuario puede marcar/desmarcar documentos en la lista de fuentes del sidebar. Esta selección determina si la consulta se aplica a \textbf{todos los documentos} o solo a los \textbf{archivos seleccionados}, afectando directamente al filtrado semántico.
+
+\subsubsection{S4 -- Estado de la Respuesta HTTP}
+
+La capa de API (\texttt{api.js}) utiliza Axios para comunicarse con el backend. El resultado de las llamadas (éxito o error HTTP) es interpretado por el frontend para actualizar el estado de la interfaz y mostrar notificaciones adecuadas.
+
+\subsection{Módulos de Decisión del Agente}
+
+Los módulos de decisión implementan el \textbf{razonamiento} del agente: cómo procesa la percepción para determinar una acción.
+
+\subsubsection{D1 -- Vectorización con HuggingFace Embeddings}
+
+Durante la ingesta, cada fragmento del documento es convertido a un vector numérico de alta dimensión mediante el modelo \texttt{BAAI/bge-small-en-v1.5}. Este modelo de código abierto, ejecutado localmente, captura el significado semántico del texto.
+
+\begin{lstlisting}[language=Python, caption={Configuración del modelo de embeddings.}]
+Settings.embed_model = HuggingFaceEmbedding(
+    model_name="BAAI/bge-small-en-v1.5"
+)
+\end{lstlisting}
+
+\subsubsection{D2 -- Indexación en ChromaDB}
+
+Los vectores generados son almacenados en una colección persistente de ChromaDB (\texttt{documentos\_usuario}), junto con los metadatos del documento (nombre de archivo, fragmento de texto). Este índice persiste en disco en \texttt{./data/chroma\_db}.
+
+\subsubsection{D3 -- Recuperación Semántica (Similarity Search)}
+
+Al recibir una pregunta, el agente vectoriza la consulta con el mismo modelo de embeddings y realiza una \textbf{búsqueda por similitud del coseno} en ChromaDB, recuperando los fragmentos más relevantes del corpus.
+
+\subsubsection{D4 -- Filtrado por Metadatos}
+
+Si el usuario ha seleccionado uno o más documentos específicos, se aplican \texttt{MetadataFilters} con condición \texttt{OR} sobre el campo \texttt{file\_name}, restringiendo la búsqueda semántica solo a los archivos indicados.
+
+\begin{lstlisting}[language=Python, caption={Aplicación de filtros por archivo en la consulta.}]
+filtros = [
+    MetadataFilter(key="file_name", value=archivo,
+                   operator=FilterOperator.EQ)
+    for archivo in archivos
+]
+filters = MetadataFilters(
+    filters=filtros, condition=FilterCondition.OR
+)
+\end{lstlisting}
+
+\subsubsection{D5 -- Generación de Respuesta (RAG con Groq/Llama 3.3)}
+
+Los fragmentos recuperados se ensamblan como contexto y se envían junto con la pregunta al modelo \texttt{llama-3.3-70b-versatile} via la API de Groq. El LLM genera la respuesta final.
+
+\subsubsection{D6 -- Prompt Restrictivo (Control de Alucinaciones)}
+
+Un \textit{system prompt} estricto instruye al modelo a responder \textbf{únicamente} con información del contexto proporcionado. Si la respuesta no está disponible en los documentos, el agente responde: \textit{``Lo siento, esa información no se encuentra en los documentos proporcionados.''}
+
+\subsection{Actuadores del Agente}
+
+Los actuadores son los mecanismos por los cuales el agente \textbf{modifica el entorno}.
+
+\subsubsection{A1 -- Respuesta en Lenguaje Natural}
+
+La respuesta generada por el LLM es recibida por el frontend y renderizada en el componente \texttt{MessageBubble.jsx} con soporte Markdown, diferenciando visualmente mensajes del usuario (derecha) y del asistente (izquierda).
+
+\subsubsection{A2 -- Notificaciones Toast}
+
+El sistema emite notificaciones visuales no intrusivas mediante la librería \texttt{react-hot-toast}: notificación de éxito al completar la ingesta de un documento, y notificación de error en caso de fallo.
+
+\subsubsection{A3 -- Escritura en Base de Datos Vectorial}
+
+La acción más relevante desde el punto de vista del estado interno del agente: la función \texttt{procesar\_y\_almacenar()} escribe los vectores e índices en ChromaDB de forma persistente, ampliando el conocimiento del agente con cada nuevo documento cargado.
+
+\subsubsection{A4 -- Indicador Visual de Procesamiento}
+
+Durante la espera de la respuesta, el componente \texttt{ChatWindow.jsx} muestra una animación de tres puntos pulsantes que informa al usuario que el agente está procesando su consulta.
+
+\subsection{Ciclo del Agente: Diagrama de Flujo}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.3cm, every node/.style={font=\small}]
+
+  \node[sensor, minimum width=4.5cm] (s1) {[S1] Usuario escribe pregunta};
+  \node[sensor, minimum width=4.5cm, below=0.7cm of s1] (s3) {[S3] Archivos seleccionados};
+  \node[decision, minimum width=4.5cm, below=0.7cm of s3] (d3) {[D3] Vectorizar pregunta\\+ Búsqueda semántica};
+  \node[decision, minimum width=4.5cm, below=0.7cm of d3] (d4) {[D4] ¿Filtro por archivo?};
+  \node[decision, minimum width=4.5cm, below=0.7cm of d4] (d5) {[D5] RAG: Contexto + LLM};
+  \node[actuator, minimum width=4.5cm, below=0.7cm of d5] (a1) {[A1] Mostrar respuesta};
+
+  \node[sensor, minimum width=4.5cm, right=3.5cm of s1] (s2) {[S2] Usuario carga documento};
+  \node[decision, minimum width=4.5cm, below=0.7cm of s2] (d1) {[D1] Vectorizar fragmentos\\(HuggingFace)};
+  \node[decision, minimum width=4.5cm, below=0.7cm of d1] (d2) {[D2] Indexar en ChromaDB};
+  \node[actuator, minimum width=4.5cm, below=0.7cm of d2] (a3) {[A3] Persistir vectores};
+  \node[actuator, minimum width=4.5cm, below=0.7cm of a3] (a2) {[A2] Notificación toast};
+
+  \draw[arrow] (s1) -- (s3);
+  \draw[arrow] (s3) -- (d3);
+  \draw[arrow] (d3) -- (d4);
+  \draw[arrow] (d4) -- (d5);
+  \draw[arrow] (d5) -- (a1);
+
+  \draw[arrow] (s2) -- (d1);
+  \draw[arrow] (d1) -- (d2);
+  \draw[arrow] (d2) -- (a3);
+  \draw[arrow] (a3) -- (a2);
+
+  %% Leyenda
+  \node[sensor, minimum width=1.5cm, right=0.5cm of a3, yshift=1.5cm] (ls) {Sensor};
+  \node[decision, minimum width=1.5cm, below=0.4cm of ls] (ld) {Decisión};
+  \node[actuator, minimum width=1.5cm, below=0.4cm of ld] (la) {Actuador};
+
+\end{tikzpicture}
+\caption{Flujo de percepción-razonamiento-acción del agente ChatDoc AI.}
+\label{fig:flujo}
+\end{figure}
+
+\subsection{Stack Tecnológico}
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{llll}
+\toprule
+\textbf{Capa} & \textbf{Tecnología} & \textbf{Versión/Variante} & \textbf{Rol} \\
+\midrule
+Frontend & React & 18+ & UI / Estado \\
+Frontend & Vite & 5+ & Bundler / Dev server \\
+Frontend & Tailwind CSS & 3 & Estilos \\
+Frontend & Framer Motion & -- & Animaciones \\
+Frontend & Axios & -- & Cliente HTTP \\
+Backend & Python & 3.10+ & Lenguaje principal \\
+Backend & FastAPI & -- & API REST \\
+Backend & LlamaIndex & -- & Orquestación RAG \\
+Backend & ChromaDB & -- & Base de datos vectorial \\
+Backend & HuggingFace & bge-small-en-v1.5 & Embeddings \\
+Backend & Groq API & llama-3.3-70b-versatile & LLM \\
+Backend & PyMuPDF & -- & Extracción PDF \\
+\bottomrule
+\end{tabular}
+\caption{Stack tecnológico completo de ChatDoc AI.}
+\label{tab:stack}
+\end{table}
+
+%%─────────────────────────────────────────────────────────────────────────────
+%% 6. RESULTADOS
+%%─────────────────────────────────────────────────────────────────────────────
+\section{Resultados}
+
+\subsection{Comportamiento del Agente}
+
+El agente ChatDoc AI exhibe el siguiente comportamiento observable durante su operación:
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item \textbf{Fase de ingesta}: Al cargar un documento, el agente lo fragmenta automáticamente, genera \textit{embeddings} para cada fragmento y los persiste en ChromaDB. El proceso es transparente para el usuario, quien recibe una notificación visual de éxito o fallo. El backend confirma el número de documentos procesados en la respuesta JSON.
+
+  \item \textbf{Fase de consulta}: Al formular una pregunta, el agente:
+    \begin{enumerate}[label=\alph*.]
+      \item Vectoriza la pregunta con el mismo modelo de embeddings.
+      \item Recupera los fragmentos más similares del índice (con o sin filtro de archivo).
+      \item Construye un prompt enriquecido con el contexto recuperado.
+      \item Genera la respuesta con el LLM y la devuelve al frontend.
+    \end{enumerate}
+
+  \item \textbf{Comportamiento ante preguntas fuera de contexto}: Cuando la pregunta no puede responderse con los documentos cargados, el agente responde con el mensaje predefinido: \textit{``Lo siento, esa información no se encuentra en los documentos proporcionados.''}, evitando alucinaciones.
+
+  \item \textbf{Filtrado por fuente}: Cuando el usuario selecciona archivos específicos en el sidebar, el agente restringe la búsqueda semántica únicamente a esos documentos, devolviendo respuestas más precisas y acotadas.
+\end{enumerate}
+
+\subsection{Identificación Final: Tabla Consolidada SDA}
+
+\begin{longtable}{p{1.5cm} p{1.5cm} p{3.5cm} p{5.5cm}}
+\toprule
+\textbf{ID} & \textbf{Tipo} & \textbf{Nombre} & \textbf{Función} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Tipo} & \textbf{Nombre} & \textbf{Función} \\
+\midrule
+\endhead
+S1 & Sensor & Entrada de texto & Captura la pregunta del usuario vía teclado o botón \\
+S2 & Sensor & Carga de archivo & Recibe documentos por drag-and-drop o selector \\
+S3 & Sensor & Selección de fuente & Indica qué archivos usar como contexto de búsqueda \\
+S4 & Sensor & Estado HTTP & Detecta éxito o fallo en la comunicación con el backend \\
+\midrule
+D1 & Decisión & Vectorización & Transforma texto en vectores semánticos (HuggingFace) \\
+D2 & Decisión & Indexación & Almacena vectores y metadatos en ChromaDB \\
+D3 & Decisión & Recuperación semántica & Busca fragmentos relevantes por similitud de coseno \\
+D4 & Decisión & Filtrado por metadatos & Restringe la búsqueda por nombre de archivo \\
+D5 & Decisión & Generación RAG & Produce respuesta con Groq/Llama 3.3 y contexto \\
+D6 & Decisión & Prompt restrictivo & Previene alucinaciones; responde solo del corpus \\
+\midrule
+A1 & Actuador & Respuesta en chat & Muestra la respuesta generada en la interfaz \\
+A2 & Actuador & Notificación toast & Informa sobre el resultado de la ingesta \\
+A3 & Actuador & Escritura en ChromaDB & Persiste los vectores del nuevo documento \\
+A4 & Actuador & Indicador de carga & Muestra animación mientras el agente procesa \\
+\bottomrule
+\caption{Tabla consolidada de Sensores, Decisiones y Actuadores del agente ChatDoc AI.}
+\label{tab:sda_final}
+\end{longtable}
+
+%%─────────────────────────────────────────────────────────────────────────────
+%% 7. CONCLUSIONES
+%%─────────────────────────────────────────────────────────────────────────────
+\section{Conclusiones}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item ChatDoc AI implementa exitosamente el paradigma RAG, logrando un agente capaz de responder preguntas en lenguaje natural sobre documentos propios del usuario, sin recurrir a conocimiento externo al corpus proporcionado.
+
+  \item El análisis de sensores, decisiones y actuadores confirma que el sistema opera como un \textbf{agente reactivo informado}: sus sensores perciben tanto el input del usuario (pregunta, archivo) como el estado del sistema (selección activa, estado HTTP); sus módulos de decisión aplican razonamiento semántico (embeddings, recuperación, filtrado, generación) y sus actuadores modifican el entorno de forma útil (respuesta, persistencia, notificación).
+
+  \item La combinación de embeddings locales (HuggingFace) con un LLM en la nube (Groq) representa un balance efectivo entre costo computacional y calidad de respuesta.
+
+  \item El uso de ChromaDB con persistencia garantiza que el conocimiento indexado no se pierde entre sesiones, permitiendo un crecimiento progresivo de la base de conocimiento del agente.
+
+  \item El prompt restrictivo implementado como D6 es crítico para la confiabilidad del sistema: elimina el riesgo de que el agente genere respuestas falsas basadas en su conocimiento paramétrico.
+\end{enumerate}
+
+%%─────────────────────────────────────────────────────────────────────────────
+%% 8. RECOMENDACIONES
+%%─────────────────────────────────────────────────────────────────────────────
+\section{Recomendaciones}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item \textbf{Autenticación y control de acceso}: Implementar un sistema de autenticación (JWT, OAuth2) para aislar los documentos por usuario, especialmente si el sistema se despliega en un entorno multiusuario.
+
+  \item \textbf{Gestión de colecciones por usuario}: Crear colecciones ChromaDB independientes por usuario o sesión, evitando que las preguntas de un usuario accedan a documentos de otro.
+
+  \item \textbf{Eliminación de documentos}: Agregar la funcionalidad de eliminar documentos del índice, incluyendo la remoción de sus vectores en ChromaDB (actualmente no existe un endpoint para esta operación).
+
+  \item \textbf{Chunking configurable}: Exponer parámetros de fragmentación (tamaño de chunk, overlap) como opciones de configuración, ya que tienen impacto directo en la calidad de la recuperación semántica.
+
+  \item \textbf{Memoria conversacional}: Integrar memoria de contexto conversacional (historial de turnos) en el módulo de decisión D5 para que el agente pueda responder preguntas de seguimiento sin perder el hilo de la conversación.
+
+  \item \textbf{Soporte de imágenes y tablas en PDF}: Mejorar el extractor de PDF (actualmente PyMuPDF) con capacidades multimodales para indexar contenido visual dentro de los documentos.
+
+  \item \textbf{Evaluación de calidad RAG}: Incorporar métricas de evaluación (fidelidad, relevancia de recuperación) usando frameworks como \texttt{RAGAS} para monitorear la calidad del agente de forma continua.
+
+  \item \textbf{Despliegue con Docker}: Containerizar el backend y el frontend con Docker Compose para facilitar el despliegue reproducible en cualquier entorno, incluyendo la correcta persistencia del volumen de ChromaDB.
+\end{enumerate}
+
+%%─────────────────────────────────────────────────────────────────────────────
+%% FIN DEL DOCUMENTO
+%%─────────────────────────────────────────────────────────────────────────────
+\end{document}
